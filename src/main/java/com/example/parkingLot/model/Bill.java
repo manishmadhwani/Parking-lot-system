@@ -1,7 +1,6 @@
 package com.example.parkingLot.model;
 
-import java.sql.Date;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import jakarta.persistence.Column;
@@ -9,55 +8,52 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 @Entity
 public class Bill {
-	
+
 	@Id
 	@GeneratedValue
-	@Column(name= "id")
-	private int billId;
-	private int receiptId;
-	
-	private Date date;
+	@Column(name = "id")
+	private String billId;
+	private String receiptId;
+
+	private LocalDateTime date;
 	private LocalTime startTime;
 	private LocalTime endTime;
 	private int totalTimeinHours;
-	
+
 	private String vehicleType;
 	private String vehicleNo;
 	private String vehicleOwnerNo;
-	
+
 	private String parkingSpot;
 	private int totalamt;
-	
+
 	@OneToOne(mappedBy = "bill")
 	private History history;
 
-	public int getBillId() {
+	public String getBillId() {
 		return billId;
 	}
 
-	public void setBillId(int billId) {
+	public void setBillId(String billId) {
 		this.billId = billId;
 	}
 
-	public int getReceiptId() {
+	public String getReceiptId() {
 		return receiptId;
 	}
 
-	public void setReceiptId(int receiptId) {
+	public void setReceiptId(String receiptId) {
 		this.receiptId = receiptId;
 	}
 
-	public Date getDate() {
+	public LocalDateTime getDate() {
 		return date;
 	}
 
-	public void setDate(Date date) {
+	public void setDate(LocalDateTime date) {
 		this.date = date;
 	}
 

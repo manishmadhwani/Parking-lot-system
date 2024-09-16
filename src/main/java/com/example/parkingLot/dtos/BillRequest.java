@@ -1,18 +1,21 @@
 package com.example.parkingLot.dtos;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
 @Data
 public class BillRequest {
 
-	@JsonAlias("id")
-	@NotEmpty(message = "Receipt id is required")
+	@NotEmpty(message = "Customer number is required")
+	@Valid
 	private String receiptId;
 
-	@NotEmpty(message = "Vehicle number is required")
-	@JsonAlias("number")
-	private String vehicleNum;
+	public String getReceiptId() {
+		return receiptId;
+	}
+
+	public void setReceiptId(String receiptId) {
+		this.receiptId = receiptId;
+	}
 }

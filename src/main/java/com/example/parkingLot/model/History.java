@@ -11,15 +11,15 @@ import lombok.Data;
 public class History {
 	@GeneratedValue
 	@Id
-	private int id;
+	private String id;
 	@OneToOne
 	private Bill bill;
-	private int receiptId;
+	private String receiptId;
 	
-	public int getId() {
+	public String getId() {
 		return id;
 	}
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 	public Bill getBill() {
@@ -28,10 +28,10 @@ public class History {
 	public void setBill(Bill bill) {
 		this.bill = bill;
 	}
-	public int getReceiptId() {
+	public String getReceiptId() {
 		return receiptId;
 	}
-	public void setReceiptId(int receiptId) {
+	public void setReceiptId(String receiptId) {
 		this.receiptId = receiptId;
 	}
 }

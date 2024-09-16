@@ -16,5 +16,5 @@ public interface ServiceInterface {
 	/*
 	 * 1) generates a bill when a vehicle comes out.
 	 */
-	Bill genrateABill(int receiptId);
+	Bill genrateABill(String receiptId);
 }

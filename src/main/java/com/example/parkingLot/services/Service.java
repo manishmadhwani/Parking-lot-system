@@ -1,7 +1,8 @@
 package com.example.parkingLot.services;
 
 import java.sql.Date;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -67,7 +68,11 @@ public class Service implements ServiceInterface {
 		receipt.setVehicleNo(customerRequest.getVehicleNo());
 		receipt.setVehicleVariant(customerRequest.getVehicleTypeVariant());
 		receipt.setVehicleType(customerRequest.getVehicleType());
-		receipt.setDate(new Date(System.currentTimeMillis()));
+
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+		LocalDateTime now = LocalDateTime.now();
+
+		receipt.setDate(now);
 		receipt.setParkingSpotId(spot.getParkingSpotId());
 		receiptRepository.save(receipt);
 
@@ -83,7 +88,7 @@ public class Service implements ServiceInterface {
 	}
 
 	@Override
-	public Bill genrateABill(int receiptId) {
+	public Bill genrateABill(String receiptId) {
 		// TODO Auto-generated method stub
 
 		// get the receipt from the data-base
@@ -94,20 +99,21 @@ public class Service implements ServiceInterface {
 		bill.setReceiptId(receiptId);
 		bill.setParkingSpot(receipt.getParkingSpotId());
 		bill.setVehicleNo(receipt.getVehicleNo());
-		bill.setDate(receipt.getDate());
 
-		LocalTime startTime = LocalTime.of(receipt.getDate().getHours(), receipt.getDate().getMinutes(),
-				receipt.getDate().getSeconds());
-		LocalTime endTime = LocalTime.now();
-		bill.setStartTime(startTime);
-		bill.setEndTime(endTime);
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+		LocalDateTime now = LocalDateTime.now();
 
-		int totalhrsInTime = endTime.getHour() - receipt.getDate().getHours();
+		bill.setDate(now);
 
-		int amount = calRate(receipt, totalhrsInTime);
+		bill.setStartTime(receipt.getDate().toLocalTime());
+		bill.setEndTime(now.toLocalTime());
+
+		int totalTimeInMis = calTotalTimeInMins(now, receipt.getDate());
+
+		int amount = calRate(receipt, totalTimeInMis);
 
 		bill.setTotalamt(amount);
-		bill.setTotalTimeinHours(totalhrsInTime);
+		bill.setTotalTimeinHours(totalTimeInMis);
 		bill.setVehicleOwnerNo(receipt.getOwnerNo());
 
 		History history = new History();
@@ -118,6 +124,13 @@ public class Service implements ServiceInterface {
 		billRepository.save(bill);
 
 		return bill;
+	}
+
+	private static int calTotalTimeInMins(LocalDateTime exitTime, LocalDateTime entryTime) {
+		int hours = exitTime.getHour()- entryTime.getHour();
+		int mins= exitTime.getMinute()- entryTime.getMinute();
+		
+		return mins;
 	}
 
 	private static int calRate(Receipt receipt, int totalhrsInTime) {

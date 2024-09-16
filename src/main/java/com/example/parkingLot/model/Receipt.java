@@ -1,6 +1,7 @@
 package com.example.parkingLot.model;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,7 +15,7 @@ public class Receipt {
 	@Column(name = "id")
 	private int receiptId;
 
-	private Date entryDateTime;
+	private LocalDateTime entryDateTime;
 
 	private String vehicleNo;
 	private String vehicleType;
@@ -40,11 +41,11 @@ public class Receipt {
 		this.receiptId = receiptId;
 	}
 
-	public Date getDate() {
+	public LocalDateTime getDate() {
 		return entryDateTime;
 	}
 
-	public void setDate(Date date) {
+	public void setDate(LocalDateTime date) {
 		this.entryDateTime = date;
 	}
 
