@@ -1,10 +1,9 @@
 package com.example.parkingLot.repository;
 
-import com.example.parkingLot.model.Receipt;
+import com.example.parkingLot.model.History;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ReceiptRepository extends JpaRepository<Receipt, Integer> {
-
+public interface HistoryRepository extends JpaRepository<History, Integer> {
 }
