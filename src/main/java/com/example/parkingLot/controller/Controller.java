@@ -39,7 +39,7 @@ public class Controller {
 
 	@PostMapping("getBill")
 	public ResponseEntity<Bill> generateAFinalBill(@RequestBody BillRequest billRequest) {
-		String receiptId= billRequest.getReceiptId();
+		int receiptId= billRequest.getReceiptId();
 		return ResponseEntity.ok(service.genrateABill(receiptId));
 	}
 }

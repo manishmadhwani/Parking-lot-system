@@ -9,13 +9,13 @@ public class BillRequest {
 
 	@NotEmpty(message = "Customer number is required")
 	@Valid
-	private String receiptId;
+	private int receiptId;
 
-	public String getReceiptId() {
+	public int getReceiptId() {
 		return receiptId;
 	}
 
-	public void setReceiptId(String receiptId) {
+	public void setReceiptId(int receiptId) {
 		this.receiptId = receiptId;
 	}
 }

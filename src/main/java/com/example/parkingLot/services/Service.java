@@ -1,145 +1,140 @@
 package com.example.parkingLot.services;
 
-import java.sql.Date;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.example.parkingLot.cache.AvailableParkingSpotsCache;
 import com.example.parkingLot.dtos.CustomerRequest;
 import com.example.parkingLot.interfaces.ServiceInterface;
-import com.example.parkingLot.model.BaseClass;
-import com.example.parkingLot.model.Bill;
-import com.example.parkingLot.model.History;
-import com.example.parkingLot.model.ParkingSpot;
-import com.example.parkingLot.model.Receipt;
-import com.example.parkingLot.model.Vehicle;
-import com.example.parkingLot.model.VehicleTypeEnum;
-import com.example.parkingLot.repository.BillRepository;
-import com.example.parkingLot.repository.ParkingSpotRepository;
-import com.example.parkingLot.repository.ReceiptRepository;
-import com.example.parkingLot.repository.VehicleRepository;
+import com.example.parkingLot.model.*;
+import com.example.parkingLot.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.sql.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.logging.Logger;
 
 @org.springframework.stereotype.Service
 public class Service implements ServiceInterface {
 
-	@Autowired
-	VehicleRepository vehicleRepository;
+    private static final Logger LOGGER = Logger.getLogger(Service.class.getName());
 
-	@Autowired
-	ParkingSpotRepository parkingSpotRepositiry;
+    @Autowired
+    VehicleRepository vehicleRepository;
 
-	@Autowired
-	AvailableParkingSpotsCache availableParkingCache;
+    @Autowired
+    ParkingSpotRepository parkingSpotRepositiry;
 
-	@Autowired
-	ReceiptRepository receiptRepository;
+    @Autowired
+    AvailableParkingSpotsCache availableParkingCache;
 
-	@Autowired
-	BillRepository billRepository;
+    @Autowired
+    ReceiptRepository receiptRepository;
 
-	@Override
-	public Receipt generateAReciept(CustomerRequest customerRequest) {
-		// check for available parking spots.
-		// assign a parking spot, and make is unavailable.
-		// generate a receipt for the same.
+    @Autowired
+    BillRepository billRepository;
 
-		ParkingSpot parkingSpot = null;
-		// get all available parking spots
-		if (customerRequest.getVehicleType().equals(VehicleTypeEnum.TWO_WHEELER.name())) {
-			parkingSpot = availableParkingCache.getAllTwoParkingSpots().stream()
-					.filter(t -> t.getParkingSpotEVNONEV().equals(customerRequest.getVehicleTypeVariant())).findFirst()
-					.get();
+    @Autowired
+    HistoryRepository historyRepository;
 
-		} else if (customerRequest.getVehicleType().equals(VehicleTypeEnum.FOUR_WHEELER.name())) {
-			parkingSpot = availableParkingCache.getAllFourParkingSpots().stream()
-					.filter(t -> t.getParkingSpotEVNONEV().equals(customerRequest.getVehicleTypeVariant())).findFirst()
-					.get();
-		}
+    private static int calTotalTimeInMins(LocalDateTime exitTime, LocalDateTime entryTime) {
+        int hours = exitTime.getHour() - entryTime.getHour();
+        int mins = exitTime.getMinute() - entryTime.getMinute();
 
-		// make the parkingSpot un-available
-		parkingSpot.setOccupiedFlag(Boolean.TRUE);
-		ParkingSpot spot = parkingSpotRepositiry.save(parkingSpot);
+        return mins;
+    }
 
-		// save receipt to the data-base
-		Receipt receipt = new Receipt();
-		receipt.setOwnerNo(customerRequest.getCustNumber());
-		receipt.setVehicleNo(customerRequest.getVehicleNo());
-		receipt.setVehicleVariant(customerRequest.getVehicleTypeVariant());
-		receipt.setVehicleType(customerRequest.getVehicleType());
+    private static int calRate(Receipt receipt, int totalhrsInTime) {
+        int amount = 0;
+        if (VehicleTypeEnum.FOUR_WHEELER.name().equals(receipt.getVehicleType()))
+            amount = (BaseClass.getFour_whellerRate()) * totalhrsInTime;
+        else if (VehicleTypeEnum.TWO_WHEELER.name().equals(receipt.getVehicleType())) {
+            amount = (BaseClass.getTwo_whellerRate()) * totalhrsInTime;
+        }
+        return amount;
+    }
 
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-		LocalDateTime now = LocalDateTime.now();
+    @Override
+    public Receipt generateAReciept(CustomerRequest customerRequest) {
+        // check for available parking spots.
+        // assign a parking spot, and make is unavailable.
+        // generate a receipt for the same.
 
-		receipt.setDate(now);
-		receipt.setParkingSpotId(spot.getParkingSpotId());
-		receiptRepository.save(receipt);
+        ParkingSpot parkingSpot = null;
+        // get all available parking spots
+        if (customerRequest.getVehicleType().equals(VehicleTypeEnum.TWO_WHEELER.name())) {
+            parkingSpot = availableParkingCache.getAllTwoParkingSpots().stream().filter(t -> t.getParkingSpotEVNONEV().equals(customerRequest.getVehicleTypeVariant())).findFirst().get();
 
-		// Save into the history table
-		Vehicle vehicle = new Vehicle();
-		vehicle.setVehicleNo(customerRequest.getVehicleNo());
-		vehicle.setLastVisited(new Date(System.currentTimeMillis()));
-		vehicle.setVehicleVariant(customerRequest.getVehicleTypeVariant());
-		vehicle.setVehicleType(customerRequest.getVehicleType());
-		vehicleRepository.save(vehicle);
+        } else if (customerRequest.getVehicleType().equals(VehicleTypeEnum.FOUR_WHEELER.name())) {
+            parkingSpot = availableParkingCache.getAllFourParkingSpots().stream().filter(t -> t.getParkingSpotEVNONEV().equals(customerRequest.getVehicleTypeVariant())).findFirst().get();
+        }
 
-		return receipt;
-	}
+        // make the parkingSpot un-available
+        parkingSpot.setOccupiedFlag(Boolean.TRUE);
+        ParkingSpot spot = parkingSpotRepositiry.save(parkingSpot);
 
-	@Override
-	public Bill genrateABill(String receiptId) {
-		// TODO Auto-generated method stub
+        // save receipt to the data-base
+        Receipt receipt = new Receipt();
+        receipt.setOwnerNo(customerRequest.getCustNumber());
+        receipt.setVehicleNo(customerRequest.getVehicleNo());
+        receipt.setVehicleVariant(customerRequest.getVehicleTypeVariant());
+        receipt.setVehicleType(customerRequest.getVehicleType());
 
-		// get the receipt from the data-base
-		@SuppressWarnings("deprecation")
-		Receipt receipt = receiptRepository.getOne(receiptId);
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
 
-		Bill bill = new Bill();
-		bill.setReceiptId(receiptId);
-		bill.setParkingSpot(receipt.getParkingSpotId());
-		bill.setVehicleNo(receipt.getVehicleNo());
+        receipt.setDate(now);
+        receipt.setParkingSpotId(spot.getParkingSpotId());
+        receiptRepository.save(receipt);
 
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-		LocalDateTime now = LocalDateTime.now();
+        // Save into the history table
+        Vehicle vehicle = new Vehicle();
+        vehicle.setVehicleNo(customerRequest.getVehicleNo());
+        vehicle.setLastVisited(new Date(System.currentTimeMillis()));
+        vehicle.setVehicleVariant(customerRequest.getVehicleTypeVariant());
+        vehicle.setVehicleType(customerRequest.getVehicleType());
+        vehicleRepository.save(vehicle);
 
-		bill.setDate(now);
+        return receipt;
+    }
 
-		bill.setStartTime(receipt.getDate().toLocalTime());
-		bill.setEndTime(now.toLocalTime());
+    @Override
+    public Bill genrateABill(int receiptId) {
+        // TODO Auto-generated method stub
 
-		int totalTimeInMis = calTotalTimeInMins(now, receipt.getDate());
+        // get the receipt from the data-base
+        LOGGER.info("[genrateABill] The the saved receipt from receiptId : " + receiptId);
+        @SuppressWarnings("deprecation") Receipt receipt = receiptRepository.getOne(receiptId);
 
-		int amount = calRate(receipt, totalTimeInMis);
+        Bill bill = new Bill();
+        bill.setReceiptId(receiptId);
+        bill.setParkingSpot(receipt.getParkingSpotId());
+        bill.setVehicleNo(receipt.getVehicleNo());
 
-		bill.setTotalamt(amount);
-		bill.setTotalTimeinHours(totalTimeInMis);
-		bill.setVehicleOwnerNo(receipt.getOwnerNo());
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
 
-		History history = new History();
-		history.setBill(bill);
-		history.setReceiptId(receiptId);
+        bill.setDate(now);
 
-		bill.setHistory(history);
-		billRepository.save(bill);
+        bill.setStartTime(receipt.getDate().toLocalTime());
+        bill.setEndTime(now.toLocalTime());
 
-		return bill;
-	}
+        int totalTimeInMis = calTotalTimeInMins(now, receipt.getDate());
 
-	private static int calTotalTimeInMins(LocalDateTime exitTime, LocalDateTime entryTime) {
-		int hours = exitTime.getHour()- entryTime.getHour();
-		int mins= exitTime.getMinute()- entryTime.getMinute();
-		
-		return mins;
-	}
+        int amount = calRate(receipt, totalTimeInMis);
 
-	private static int calRate(Receipt receipt, int totalhrsInTime) {
-		int amount = 0;
-		if (VehicleTypeEnum.FOUR_WHEELER.name().equals(receipt.getVehicleType()))
-			amount = (BaseClass.getFour_whellerRate()) * totalhrsInTime;
-		else if (VehicleTypeEnum.TWO_WHEELER.name().equals(receipt.getVehicleType())) {
-			amount = (BaseClass.getTwo_whellerRate()) * totalhrsInTime;
-		}
-		return amount;
-	}
+        bill.setTotalamt(amount);
+        bill.setTotalTimeinHours(totalTimeInMis);
+        bill.setVehicleOwnerNo(receipt.getOwnerNo());
+
+        LOGGER.info("[genrateABill] Generating a bill for billId : "
+                + bill.getBillId() + " and amount : " + bill.getTotalamt());
+        History history = new History();
+        history.setBill(bill);
+        history.setReceiptId(receiptId);
+
+        LOGGER.info("[genrateABill] Saving to the history table : " + history);
+        bill.setHistory(history);
+        billRepository.save(bill);
+
+        return bill;
+    }
 }
