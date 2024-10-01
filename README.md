@@ -1,5 +1,6 @@
 # Parking-lot-system
-This system, allows user to park vehicle, in different parking lots, based in different cities.
+*** User should be able to park their vehicle, on the allocate parking spot id given.
+* System should generate a bill - receipt for the user along with all the details and the amount to be paid.**
 
 # Swagger
 http://localhost:8088/api/parkinglot/swagger-ui/index.html#/
