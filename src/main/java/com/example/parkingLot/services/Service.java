@@ -2,15 +2,20 @@ package com.example.parkingLot.services;
 
 import com.example.parkingLot.cache.AvailableParkingSpotsCache;
 import com.example.parkingLot.dtos.CustomerRequest;
+import com.example.parkingLot.excptions.ReceiptNotFoundException;
 import com.example.parkingLot.interfaces.ServiceInterface;
 import com.example.parkingLot.model.*;
 import com.example.parkingLot.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.logging.Logger;
+
+import static com.example.parkingLot.dtos.Constants.receiptNotFoundException;
 
 @org.springframework.stereotype.Service
 public class Service implements ServiceInterface {
@@ -45,9 +50,9 @@ public class Service implements ServiceInterface {
     private static int calRate(Receipt receipt, int totalhrsInTime) {
         int amount = 0;
         if (VehicleTypeEnum.FOUR_WHEELER.name().equals(receipt.getVehicleType()))
-            amount = (BaseClass.getFour_whellerRate()) * totalhrsInTime;
+            amount = (BaseClass.getFourWhellerRate()) * totalhrsInTime;
         else if (VehicleTypeEnum.TWO_WHEELER.name().equals(receipt.getVehicleType())) {
-            amount = (BaseClass.getTwo_whellerRate()) * totalhrsInTime;
+            amount = (BaseClass.getTwoWhellerRate()) * totalhrsInTime;
         }
         return amount;
     }
@@ -96,13 +101,16 @@ public class Service implements ServiceInterface {
         return receipt;
     }
 
+    @Transactional
     @Override
-    public Bill genrateABill(int receiptId) {
+    public Bill genrateABill(int receiptId) throws ReceiptNotFoundException {
         // TODO Auto-generated method stub
-
         // get the receipt from the data-base
         LOGGER.info("[genrateABill] The the saved receipt from receiptId : " + receiptId);
         @SuppressWarnings("deprecation") Receipt receipt = receiptRepository.getOne(receiptId);
+
+        if (receipt == null || Objects.isNull(receipt))
+            throw new ReceiptNotFoundException(receiptNotFoundException);
 
         Bill bill = new Bill();
         bill.setReceiptId(receiptId);
@@ -126,7 +134,8 @@ public class Service implements ServiceInterface {
         bill.setVehicleOwnerNo(receipt.getOwnerNo());
 
         LOGGER.info("[genrateABill] Generating a bill for billId : "
-                + bill.getBillId() + " and amount : " + bill.getTotalamt());
+                + bill.getBillId() + " and amount : "
+                + bill.getTotalamt());
         History history = new History();
         history.setBill(bill);
         history.setReceiptId(receiptId);

@@ -1,6 +1,7 @@
 package com.example.parkingLot.interfaces;
 
 import com.example.parkingLot.dtos.CustomerRequest;
+import com.example.parkingLot.excptions.ReceiptNotFoundException;
 import com.example.parkingLot.model.Bill;
 import com.example.parkingLot.model.Receipt;
 
@@ -19,5 +20,5 @@ public interface ServiceInterface {
      * 2) Marking the parkingSpotId available again.
      * 3) Save into the history table.
      */
-    Bill genrateABill(int receiptId);
+    Bill genrateABill(int receiptId) throws ReceiptNotFoundException;
 }
