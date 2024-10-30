@@ -109,8 +109,7 @@ public class Service implements ServiceInterface {
         LOGGER.info("[genrateABill] The the saved receipt from receiptId : " + receiptId);
         @SuppressWarnings("deprecation") Receipt receipt = receiptRepository.getOne(receiptId);
 
-        if (receipt == null || Objects.isNull(receipt))
-            throw new ReceiptNotFoundException(receiptNotFoundException);
+        if (receipt == null || Objects.isNull(receipt)) throw new ReceiptNotFoundException(receiptNotFoundException);
 
         Bill bill = new Bill();
         bill.setReceiptId(receiptId);
@@ -133,9 +132,7 @@ public class Service implements ServiceInterface {
         bill.setTotalTimeinHours(totalTimeInMis);
         bill.setVehicleOwnerNo(receipt.getOwnerNo());
 
-        LOGGER.info("[genrateABill] Generating a bill for billId : "
-                + bill.getBillId() + " and amount : "
-                + bill.getTotalamt());
+        LOGGER.info("[genrateABill] Generating a bill for billId : " + bill.getBillId() + " and amount : " + bill.getTotalamt());
         History history = new History();
         history.setBill(bill);
         history.setReceiptId(receiptId);
