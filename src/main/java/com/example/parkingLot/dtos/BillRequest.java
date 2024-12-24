@@ -2,11 +2,9 @@ package com.example.parkingLot.dtos;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-@Data
 @Getter
 @Setter
 public class BillRequest {
@@ -16,4 +14,21 @@ public class BillRequest {
     @Valid
     private int receiptId;
 
+    public String getPaymentMode() {
+        return paymentMode;
+    }
+
+    public void setPaymentMode(String paymentMode) {
+        this.paymentMode = paymentMode;
+    }
+
+    @NotEmpty(message = "Customer number is required")
+    @Valid
+    public int getReceiptId() {
+        return receiptId;
+    }
+
+    public void setReceiptId(@NotEmpty(message = "Customer number is required") @Valid int receiptId) {
+        this.receiptId = receiptId;
+    }
 }

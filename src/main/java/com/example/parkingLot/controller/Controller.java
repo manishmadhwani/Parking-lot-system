@@ -26,7 +26,8 @@ public class Controller {
     }
 
     @PostMapping("getReceipt")
-    public ResponseEntity<Receipt> generateAReceipt(@RequestBody CustomerRequest customerRequest) throws Exception {
+    public ResponseEntity<Receipt> generateAReceipt(@RequestBody CustomerRequest customerRequest)
+            throws Exception {
         // Generate a receipt
         // Get a parking spot for the customer
         if (EnumUtils.isValidEnum(VehicleTypeEnum.class, customerRequest.getVehicleType())) {
@@ -38,8 +39,10 @@ public class Controller {
     }
 
     @PostMapping("getBill")
-    public ResponseEntity<Bill> generateAFinalBill(@RequestBody BillRequest billRequest) throws ReceiptNotFoundException {
+    public ResponseEntity<String> generateAFinalBill(@RequestBody BillRequest billRequest)
+            throws ReceiptNotFoundException {
         int receiptId = billRequest.getReceiptId();
-        return ResponseEntity.ok(service.genrateABill(receiptId));
+        Bill bill= service.genrateABill(receiptId);
+        return ResponseEntity.ok(bill.toString());
     }
 }

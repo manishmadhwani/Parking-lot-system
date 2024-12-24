@@ -17,4 +17,28 @@ public class History {
     @OneToOne
     private Bill bill;
     private int receiptId;
+
+    public Bill getBill() {
+        return bill;
+    }
+
+    public void setBill(Bill bill) {
+        this.bill = bill;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getReceiptId() {
+        return receiptId;
+    }
+
+    public void setReceiptId(int receiptId) {
+        this.receiptId = receiptId;
+    }
 }

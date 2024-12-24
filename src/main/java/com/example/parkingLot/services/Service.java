@@ -40,7 +40,8 @@ public class Service implements ServiceInterface {
     @Autowired
     HistoryRepository historyRepository;
 
-    private static int calTotalTimeInMins(LocalDateTime exitTime, LocalDateTime entryTime) {
+    private static int calTotalTimeInMins(LocalDateTime exitTime,
+                                          LocalDateTime entryTime) {
         int hours = exitTime.getHour() - entryTime.getHour();
         int mins = exitTime.getMinute() - entryTime.getMinute();
 
@@ -66,16 +67,46 @@ public class Service implements ServiceInterface {
         ParkingSpot parkingSpot = null;
         // get all available parking spots
         if (customerRequest.getVehicleType().equals(VehicleTypeEnum.TWO_WHEELER.name())) {
-            parkingSpot = availableParkingCache.getAllTwoParkingSpots().stream().filter(t -> t.getParkingSpotEVNONEV().equals(customerRequest.getVehicleTypeVariant())).findFirst().get();
+            parkingSpot = availableParkingCache.getAllTwoParkingSpots().stream()
+                    .filter(t -> t.getParkingSpotEVNONEV().equals(customerRequest.getVehicleTypeVariant()))
+                    .findFirst().get();
 
         } else if (customerRequest.getVehicleType().equals(VehicleTypeEnum.FOUR_WHEELER.name())) {
-            parkingSpot = availableParkingCache.getAllFourParkingSpots().stream().filter(t -> t.getParkingSpotEVNONEV().equals(customerRequest.getVehicleTypeVariant())).findFirst().get();
+            parkingSpot = availableParkingCache.getAllFourParkingSpots().stream()
+                    .filter(t -> t.getParkingSpotEVNONEV().equals(customerRequest.getVehicleTypeVariant()))
+                    .findFirst().get();
         }
 
         // make the parkingSpot un-available
         parkingSpot.setOccupiedFlag(Boolean.TRUE);
         ParkingSpot spot = parkingSpotRepositiry.save(parkingSpot);
 
+        Receipt receipt= generateReceipt(customerRequest, spot);
+        /*
+         *  save create entry to vehicle table from customer request obj
+         */
+        createEntryToVehicle(customerRequest);
+
+        return receipt;
+    }
+
+    /*
+    *  save create entry to vehicle table from customer request obj
+    */
+    private void createEntryToVehicle (CustomerRequest customerRequest){
+        // Save into the history table
+        Vehicle vehicle = new Vehicle();
+        vehicle.setVehicleNo(customerRequest.getVehicleNo());
+        vehicle.setLastVisited(new Date(System.currentTimeMillis()));
+        vehicle.setVehicleVariant(customerRequest.getVehicleTypeVariant());
+        vehicle.setVehicleType(customerRequest.getVehicleType());
+        vehicleRepository.save(vehicle);
+    }
+
+    /*
+    * generate a bill from customer request and parking spot object
+    * */
+    private Receipt generateReceipt(CustomerRequest customerRequest, ParkingSpot spot){
         // save receipt to the data-base
         Receipt receipt = new Receipt();
         receipt.setOwnerNo(customerRequest.getCustNumber());
@@ -89,15 +120,6 @@ public class Service implements ServiceInterface {
         receipt.setDate(now);
         receipt.setParkingSpotId(spot.getParkingSpotId());
         receiptRepository.save(receipt);
-
-        // Save into the history table
-        Vehicle vehicle = new Vehicle();
-        vehicle.setVehicleNo(customerRequest.getVehicleNo());
-        vehicle.setLastVisited(new Date(System.currentTimeMillis()));
-        vehicle.setVehicleVariant(customerRequest.getVehicleTypeVariant());
-        vehicle.setVehicleType(customerRequest.getVehicleType());
-        vehicleRepository.save(vehicle);
-
         return receipt;
     }
 
@@ -111,10 +133,25 @@ public class Service implements ServiceInterface {
 
         if (receipt == null || Objects.isNull(receipt)) throw new ReceiptNotFoundException(receiptNotFoundException);
 
+        Bill bill= getBill(receiptId, receipt);
+        LOGGER.info("[genrateABill] Generating a bill for billId : " + bill.getBillId() + " and amount : " + bill.getTotalamt());
+        History history = new History();
+        history.setBill(bill);
+        history.setReceiptId(receiptId);
+
+        LOGGER.info("[genrateABill] Saving to the history table : " + history);
+        bill.setHistory(history);
+        billRepository.save(bill);
+
+        return bill;
+    }
+
+    private Bill getBill(int receiptId, Receipt receipt){
         Bill bill = new Bill();
         bill.setReceiptId(receiptId);
         bill.setParkingSpot(receipt.getParkingSpotId());
         bill.setVehicleNo(receipt.getVehicleNo());
+        bill.setVehicleType(receipt.getVehicleType());
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
@@ -131,16 +168,6 @@ public class Service implements ServiceInterface {
         bill.setTotalamt(amount);
         bill.setTotalTimeinHours(totalTimeInMis);
         bill.setVehicleOwnerNo(receipt.getOwnerNo());
-
-        LOGGER.info("[genrateABill] Generating a bill for billId : " + bill.getBillId() + " and amount : " + bill.getTotalamt());
-        History history = new History();
-        history.setBill(bill);
-        history.setReceiptId(receiptId);
-
-        LOGGER.info("[genrateABill] Saving to the history table : " + history);
-        bill.setHistory(history);
-        billRepository.save(bill);
-
         return bill;
     }
 }
