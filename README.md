@@ -9,6 +9,6 @@ http://localhost:8088/api/parkinglot/swagger-ui/index.html#/
 # Local setup
 The parking lot application works on jdk, java version 17. This projct is a gradle based out project.
 In memory local database setup is done in H2-console. 
-http://localhost:8088/api/parkinglot/h2-console/login.jsp
+http://localhost:8080/api/parkinglot/h2-console/login.jsp
 
 
