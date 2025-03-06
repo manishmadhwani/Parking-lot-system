@@ -19,43 +19,33 @@ public class Bill {
     @Setter
     @Getter
     private int receiptId;
-
     @Setter
     @Getter
     private LocalDateTime date;
-
     @Setter
     @Getter
     private LocalTime startTime;
-
     @Setter
     @Getter
     private LocalTime endTime;
-
     @Setter
     @Getter
     private int totalTimeinHours;
-
     @Setter
     @Getter
     private String vehicleType;
-
     @Setter
     @Getter
     private String vehicleNo;
-
     @Setter
     @Getter
     private String vehicleOwnerNo;
-
     @Setter
     @Getter
     private String parkingSpot;
-
     @Setter
     @Getter
     private int totalamt;
-
     @Setter
     @Getter
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "bill")

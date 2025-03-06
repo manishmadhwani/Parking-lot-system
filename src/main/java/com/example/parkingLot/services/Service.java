@@ -6,6 +6,8 @@ import com.example.parkingLot.excptions.ReceiptNotFoundException;
 import com.example.parkingLot.interfaces.ServiceInterface;
 import com.example.parkingLot.model.*;
 import com.example.parkingLot.repository.*;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,7 +50,8 @@ public class Service implements ServiceInterface {
         return mins;
     }
 
-    private static int calRate(Receipt receipt, int totalhrsInTime) {
+    private static int calRate(Receipt receipt,
+                               int totalhrsInTime) {
         int amount = 0;
         if (VehicleTypeEnum.FOUR_WHEELER.name().equals(receipt.getVehicleType()))
             amount = (BaseClass.getFourWhellerRate()) * totalhrsInTime;
@@ -58,42 +61,35 @@ public class Service implements ServiceInterface {
         return amount;
     }
 
+
+    /**
+    * Generate a receipt for the customer who enters
+    * @Param CustomerRequest
+    * @Return Receipt
+    * */
     @Override
     public Receipt generateAReciept(CustomerRequest customerRequest) {
-        // check for available parking spots.
-        // assign a parking spot, and make is unavailable.
-        // generate a receipt for the same.
-
         ParkingSpot parkingSpot = null;
-        // get all available parking spots
         if (customerRequest.getVehicleType().equals(VehicleTypeEnum.TWO_WHEELER.name())) {
-            parkingSpot = availableParkingCache.getAllTwoParkingSpots().stream()
-                    .filter(t -> t.getParkingSpotEVNONEV().equals(customerRequest.getVehicleTypeVariant()))
-                    .findFirst().get();
+            parkingSpot = availableParkingCache.getAllTwoParkingSpots()
+                    .stream().filter(t -> t.getParkingSpotEVNONEV()
+                            .equals(customerRequest.getVehicleTypeVariant())).findFirst().get();
 
         } else if (customerRequest.getVehicleType().equals(VehicleTypeEnum.FOUR_WHEELER.name())) {
             parkingSpot = availableParkingCache.getAllFourParkingSpots().stream()
-                    .filter(t -> t.getParkingSpotEVNONEV().equals(customerRequest.getVehicleTypeVariant()))
-                    .findFirst().get();
+                    .filter(t -> t.getParkingSpotEVNONEV()
+                            .equals(customerRequest.getVehicleTypeVariant())).findFirst().get();
         }
 
-        // make the parkingSpot un-available
         parkingSpot.setOccupiedFlag(Boolean.TRUE);
         ParkingSpot spot = parkingSpotRepositiry.save(parkingSpot);
 
-        Receipt receipt= generateReceipt(customerRequest, spot);
-        /*
-         *  save create entry to vehicle table from customer request obj
-         */
+        Receipt receipt = generateReceipt(customerRequest, spot);
         createEntryToVehicle(customerRequest);
-
         return receipt;
     }
 
-    /*
-    *  save create entry to vehicle table from customer request obj
-    */
-    private void createEntryToVehicle (CustomerRequest customerRequest){
+    private void createEntryToVehicle(CustomerRequest customerRequest) {
         // Save into the history table
         Vehicle vehicle = new Vehicle();
         vehicle.setVehicleNo(customerRequest.getVehicleNo());
@@ -103,10 +99,13 @@ public class Service implements ServiceInterface {
         vehicleRepository.save(vehicle);
     }
 
-    /*
-    * generate a bill from customer request and parking spot object
-    * */
-    private Receipt generateReceipt(CustomerRequest customerRequest, ParkingSpot spot){
+    /**
+     * Generate a receipt for the customer who enters
+     * @Param CustomerRequest,
+     *          ParkingSpot
+     * @Return Receipt
+     * */
+    private Receipt generateReceipt(CustomerRequest customerRequest, ParkingSpot spot) {
         // save receipt to the data-base
         Receipt receipt = new Receipt();
         receipt.setOwnerNo(customerRequest.getCustNumber());
@@ -133,8 +132,9 @@ public class Service implements ServiceInterface {
 
         if (receipt == null || Objects.isNull(receipt)) throw new ReceiptNotFoundException(receiptNotFoundException);
 
-        Bill bill= getBill(receiptId, receipt);
-        LOGGER.info("[genrateABill] Generating a bill for billId : " + bill.getBillId() + " and amount : " + bill.getTotalamt());
+        Bill bill = getBill(receiptId, receipt);
+        LOGGER.info("[genrateABill] Generating a bill for billId : "
+                + bill.getBillId() + " and amount : " + bill.getTotalamt());
         History history = new History();
         history.setBill(bill);
         history.setReceiptId(receiptId);
@@ -143,10 +143,13 @@ public class Service implements ServiceInterface {
         bill.setHistory(history);
         billRepository.save(bill);
 
+        Configuration configuration = new Configuration();
+        SessionFactory sessionFactory = null;
+        sessionFactory.getCurrentSession();
         return bill;
     }
 
-    private Bill getBill(int receiptId, Receipt receipt){
+    private Bill getBill(int receiptId, Receipt receipt) {
         Bill bill = new Bill();
         bill.setReceiptId(receiptId);
         bill.setParkingSpot(receipt.getParkingSpotId());

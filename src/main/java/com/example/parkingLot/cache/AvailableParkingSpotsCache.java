@@ -13,9 +13,9 @@ import java.util.List;
 @Component
 public class AvailableParkingSpotsCache {
 
+    private final Logger LOG = LoggerFactory.getLogger(AvailableParkingSpotsCache.class);
     @Autowired
     ParkingSpotRepository parkingSpotRepositiry;
-    private final Logger LOG = LoggerFactory.getLogger(AvailableParkingSpotsCache.class);
 
     public List<ParkingSpot> getAllTwoParkingSpots() {
         LOG.info("Fetching available Parking spot for two wheelers from database .. ");
