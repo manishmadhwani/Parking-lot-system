@@ -4,6 +4,7 @@ import com.example.parkingLot.dtos.BillRequest;
 import com.example.parkingLot.dtos.CustomerRequest;
 import com.example.parkingLot.excptions.ReceiptNotFoundException;
 import com.example.parkingLot.model.Bill;
+import com.example.parkingLot.model.ParkingSpot;
 import com.example.parkingLot.model.Receipt;
 import com.example.parkingLot.model.VehicleTypeEnum;
 import org.apache.commons.lang3.EnumUtils;
@@ -25,11 +26,19 @@ public class Controller {
         return "Spring boot project working fine.";
     }
 
+    @GetMapping("getAllAvailable")
+    public ResponseEntity<ParkingSpot> getAllAvailableParkingSlots() {
+
+        return null;
+    }
+
+    /**
+     * @param customerRequest
+     * @return receipt
+     * @apiNote Generates a receipt, with parkingSpotId
+     **/
     @PostMapping("getReceipt")
-    public ResponseEntity<Receipt> generateAReceipt(@RequestBody CustomerRequest customerRequest)
-            throws Exception {
-        // Generate a receipt
-        // Get a parking spot for the customer
+    public ResponseEntity<Receipt> generateAReceipt(@RequestBody CustomerRequest customerRequest) throws Exception {
         if (EnumUtils.isValidEnum(VehicleTypeEnum.class, customerRequest.getVehicleType())) {
             Receipt receipt = service.generateAReciept(customerRequest);
             return ResponseEntity.ok(receipt);
@@ -39,10 +48,9 @@ public class Controller {
     }
 
     @PostMapping("getBill")
-    public ResponseEntity<String> generateAFinalBill(@RequestBody BillRequest billRequest)
-            throws ReceiptNotFoundException {
+    public ResponseEntity<String> generateAFinalBill(@RequestBody BillRequest billRequest) throws ReceiptNotFoundException {
         int receiptId = billRequest.getReceiptId();
-        Bill bill= service.genrateABill(receiptId);
+        Bill bill = service.genrateABill(receiptId);
         return ResponseEntity.ok(bill.toString());
     }
 }

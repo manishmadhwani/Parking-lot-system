@@ -1,8 +1,6 @@
 insert into CITIES (city_id, name) VALUES ('444001', 'Akola');
-insert into CITIES (city_id, name) VALUES ('411033', 'Pune');
 
 insert into PARKINGLOTS (parkinglot_id, parkingLotName, parkingLotAddress, noOfFloors, noOfGates, capacity, city_id) VALUES ('4440011', 'AkolaParkinglot', 'Adarsh colony', '3', '3', '45', '444001');
-insert into PARKINGLOTS (parkinglot_id, parkingLotName, parkingLotAddress, noOfFloors, noOfGates, capacity, city_id) VALUES ('4110331', 'PuneParkinglot', 'Hinjewadi', '5', '5', '75', '411033');
 
 insert into PARKINGSPOTS (parkingspot_id, parkingSpotType, parkingSpotEVNONEV, occupiedFlag, parkinglot_id) VALUES ('A1', 'FOUR_WHEELER', 'NON_EV', FALSE, '4440011');
 insert into PARKINGSPOTS (parkingspot_id, parkingSpotType, parkingSpotEVNONEV, occupiedFlag, parkinglot_id) VALUES ('A2', 'FOUR_WHEELER', 'NON_EV', FALSE, '4440011');

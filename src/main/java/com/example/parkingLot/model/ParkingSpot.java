@@ -74,4 +74,5 @@ public class ParkingSpot {
     public void setParkingSpotType(String parkingSpotType) {
         this.parkingSpotType = parkingSpotType;
     }
+
 }

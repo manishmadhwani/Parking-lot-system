@@ -2,32 +2,45 @@ package com.example.parkingLot.cache;
 
 import com.example.parkingLot.model.ParkingSpot;
 import com.example.parkingLot.repository.ParkingSpotRepository;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 
 @Component
 public class AvailableParkingSpotsCache {
 
     private final Logger LOG = LoggerFactory.getLogger(AvailableParkingSpotsCache.class);
+    LinkedList<ParkingSpot> parkingSpots;
     @Autowired
-    ParkingSpotRepository parkingSpotRepositiry;
+    ParkingSpotRepository parkingSpotRepository;
 
-    public List<ParkingSpot> getAllTwoParkingSpots() {
+    @Setter
+    @Getter
+    List<ParkingSpot> twoWheelers;
+
+    @Setter
+    @Getter
+    List<ParkingSpot> fourWheelers;
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void loadAllParking() {
         LOG.info("Fetching available Parking spot for two wheelers from database .. ");
-        List<ParkingSpot> parkingSpots = parkingSpotRepositiry.findAllAvailableTwoParkingSpots();
-        Collections.sort(parkingSpots, (t1, t2) -> t1.getParkingSpotId().compareTo(t2.getParkingSpotId()));
-        return parkingSpots;
-    }
+        twoWheelers = parkingSpotRepository.findAllAvailableTwoParkingSpots();
 
-    public List<ParkingSpot> getAllFourParkingSpots() {
+        Comparator<ParkingSpot> comp = (o1, o2) -> o1.getParkingSpotId().compareTo(o2.getParkingSpotId());
+        twoWheelers.sort(comp);
+
         LOG.info("Fetching available Parking spot for four wheelers from database .. ");
-        List<ParkingSpot> parkingSpots = parkingSpotRepositiry.findAllAvailableFourParkingSpots();
-        Collections.sort(parkingSpots, (t1, t2) -> t1.getParkingSpotId().compareTo(t2.getParkingSpotId()));
-        return parkingSpots;
+        fourWheelers = parkingSpotRepository.findAllAvailableFourParkingSpots();
+        fourWheelers.sort(comp);
     }
 }
